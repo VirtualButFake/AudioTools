@@ -25,7 +25,7 @@ local function deepCopy(original)
 	return copy
 end
 
-local function tableToString(t)
+local function stringToTable(t)
 	-- i know, i know, bad way of doing this but the important part is that it works
 	-- only supports tables & strings
 	-- there's not much context we have, so we can only work with extremely basic things
@@ -75,5 +75,5 @@ return function(fileMap)
         return v
     end, fileMap)
 
-    fs.writeFile("./output.lua", tableToString(fileMap))
+    fs.writeFile("./output.lua", stringToTable(fileMap))
 end

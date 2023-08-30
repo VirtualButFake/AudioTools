@@ -19,7 +19,7 @@ local function iterateTable(entry, callback, resp)
 	end
 end
 
-local function tableToString(t)
+local function stringToTable(t)
 	-- i know, i know, bad way of doing this but the important part is that it works
 	-- only supports tables & strings
 	-- there's not much context we have, so we can only work with extremely basic things
@@ -300,7 +300,7 @@ iterateDir(settings.folder, function(path, isFolder)
 end)
 
 -- save new data
-fs.writeFile(settings.folder .. "/data.lua", tableToString(fileMap))
+fs.writeFile(settings.folder .. "/data.lua", stringToTable(fileMap))
 
 -- write to file
 if settings.outputType then
