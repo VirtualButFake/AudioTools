@@ -1,8 +1,7 @@
 
 # Automatic ROBLOX audio-related things script
 
-Designed to be used with Lune, basically just [Tarmac](https://github.com/Roblox/tarmac) but for audio
-
+Designed to be used with Lune, aims to be something like [Tarmac](https://github.com/Roblox/tarmac) but for audio and not updated often
 (i got bored)
 
   
