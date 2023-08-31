@@ -19,44 +19,7 @@ local function iterateTable(entry, callback, resp)
 	end
 end
 
-local function stringToTable(t)
-	-- i know, i know, bad way of doing this but the important part is that it works
-	-- only supports tables & strings
-	-- there's not much context we have, so we can only work with extremely basic things
-	local returnString = "return {"
-	local inTable = false
-	local openAmount, closeAmount = 0, 0
-
-	iterateTable(t, function(i, v, resp)
-		if inTable and resp ~= inTable then 
-			closeAmount += 1
-			returnString ..= "},"
-			inTable = false
-		end
-
-		if typeof(v) == "table" then 
-			openAmount += 1
-			returnString ..= `{i}=` .. "{" -- luau lsp doesnt like it when i escaped a curly bracket
-			inTable = v
-			return v
-		elseif typeof(v) == "string" then  
-			if typeof(i) == "number" then 
-				returnString ..= `\"{v}\",`
-			else 
-				returnString ..= `{i}=\"{v}\",`
-			end
-
-			return inTable
-		end
-
-		return
-	end)
-
-
-	returnString ..= ("}"):rep(openAmount - closeAmount + 1)
-
-	return returnString
-end
+local stringToTable = require("libs/stringToTable").encode
 
 local function iterateDir(path, callback: (path: string, dir: boolean) -> ())
 	local files = fs.readDir(path)
@@ -286,6 +249,11 @@ iterateDir(settings.folder, function(path, isFolder)
 				api_key = settings.apiKey,
 			})
 
+			if data and data.response.assetId == nil then
+				logger.error(`Did not get asset id on {path}, skipping..`)
+				return
+			end
+
 			logger.success(`Uploaded {path} to {data.response.assetId}`)
 			if settings.experienceIDs then
 				api:authenticateAudio(data.response.assetId, settings.experienceIDs)
@@ -300,7 +268,7 @@ iterateDir(settings.folder, function(path, isFolder)
 end)
 
 -- save new data
-fs.writeFile(settings.folder .. "/data.lua", stringToTable(fileMap))
+fs.writeFile(settings.folder .. "/data.lua", "return " .. stringToTable(fileMap))
 
 -- write to file
 if settings.outputType then

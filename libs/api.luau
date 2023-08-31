@@ -21,10 +21,10 @@ local function request(requestConfig)
 	-- wrapper for net.request that automatically repeats requests on rate limits
 	local response
 
-	while not response or response.statusCode == 429 do 
+	while not response or response.statusCode == 429 do
 		response = net.request(requestConfig)
 
-		if response.statusCode == 429 then 
+		if response.statusCode == 429 then
 			-- wait 5 seconds and repeat
 			task.wait(5)
 		end
@@ -74,13 +74,13 @@ function api.getOperationData(self: apiHandler, operationId: string, apiKey: str
 	end
 
 	local resp = repeatCall()
-	local waitTime = 1
+	local attempts = 0
 
 	while resp.statusCode ~= 200 or not net.jsonDecode(resp.body).done do
-		task.wait(waitTime)
-		waitTime += 0.5
+		task.wait(5)
+		attempts += 1 
 
-		if waitTime > 5 then
+		if attempts > 15 then -- 15 attempts, for rate limits (which are generally 60 seconds, sowe account for a bit more)
 			return nil
 		end
 
@@ -104,8 +104,8 @@ function api.uploadSound(self: apiHandler, options: assetUploadOptions)
 
 	local newParams = {}
 
-	for i, param in params do 
-		if param:find("^-%-") then 
+	for i, param in params do
+		if param:find("^-%-") then
 			-- new param = split on first space
 			local flag, value = param:match("^(%S+)%s+(.+)")
 			table.insert(newParams, flag)
@@ -124,7 +124,7 @@ function api.uploadSound(self: apiHandler, options: assetUploadOptions)
 		-- get asset data
 		local assetData = self:getOperationData(id, options.api_key)
 
-		if not assetData then
+		if assetData == nil then
 			logger.error(`Could not get asset data of {options.path}, skipping asset.`)
 			return { success = false }
 		end
@@ -145,17 +145,17 @@ function api.uploadSound(self: apiHandler, options: assetUploadOptions)
 	return { success = false }
 end
 
-function api.authenticateAudio(self: apiHandler, audioAsset: string, experienceIds: { string | number} )
+function api.authenticateAudio(self: apiHandler, audioAsset: string, experienceIds: { string | number })
 	-- {"subjectType":"Universe","subjectId":"' .. tostring(experienceId) .. '","action":"Use"}
 	local body = {
-		requests = {}
+		requests = {},
 	}
 
-	for _, id in experienceIds do 
+	for _, id in experienceIds do
 		table.insert(body.requests, {
 			subjectType = "Universe",
 			subjectId = id,
-			action = "Use"
+			action = "Use",
 		})
 	end
 
